@@ -33,6 +33,13 @@ music-assistant-mcp
 python -m music_assistant_mcp
 ```
 
+### Generating a Long-Lived Access Token
+
+1. Navigate to your Music Assistant instance at `http://<your-ma-host>:8095/#/settings/profile`.
+2. Scroll down to the **Long-lived access token** section and click **+ Create new token**.
+3. Assign a name and submit.
+4. Copy the generated token value to a safe place — you will need it in the setup steps below.
+
 ### Claude Code Integration
 
 Add via CLI:
