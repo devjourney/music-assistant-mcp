@@ -1,0 +1,75 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "music-assistant-mcp"
+version = "0.1.0"
+description = "MCP server for Music Assistant – control playback, browse libraries, and manage queues via AI assistants"
+readme = "README.md"
+requires-python = ">=3.11"
+license = "MIT"
+
+authors = [
+    { email = "devjourney@live.com" },
+]
+
+keywords = [
+    "mcp",
+    "model-context-protocol",
+    "music-assistant",
+    "home-assistant",
+    "ai",
+    "claude",
+    "smart-home",
+    "audio",
+    "fastmcp",
+]
+
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Home Automation",
+    "Topic :: Multimedia :: Sound/Audio",
+]
+
+dependencies = [
+    "fastmcp>=2.0.0,<4.0",
+    "music-assistant-client>=1.0.0",
+    "aiohttp>=3.9.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.23",
+    "ruff>=0.4",
+    "mypy>=1.10",
+]
+
+[project.urls]
+Homepage = "https://github.com/devjourney/music-assistant-mcp"
+Repository = "https://github.com/devjourney/music-assistant-mcp.git"
+"Bug Tracker" = "https://github.com/devjourney/music-assistant-mcp/issues"
+Changelog = "https://github.com/devjourney/music-assistant-mcp/blob/main/CHANGELOG.md"
+
+[project.scripts]
+music-assistant-mcp = "music_assistant_mcp.server:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/music_assistant_mcp"]
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "src/",
+    "pyproject.toml",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md",
+]
