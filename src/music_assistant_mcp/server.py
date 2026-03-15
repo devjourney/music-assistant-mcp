@@ -55,8 +55,8 @@ mcp = FastMCP(
 )
 
 # Register all tools and resources
-from music_assistant_mcp.tools import library, playback, playlists, queue, search
-from music_assistant_mcp import resources
+from music_assistant_mcp.tools import library, playback, playlists, queue, search  # noqa: E402
+from music_assistant_mcp import resources  # noqa: E402
 
 search.register(mcp)
 library.register(mcp)
