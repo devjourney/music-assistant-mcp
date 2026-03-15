@@ -45,14 +45,6 @@ dependencies = [
     "aiohttp>=3.9.0",
 ]
 
-[project.optional-dependencies]
-dev = [
-    "pytest>=8.0",
-    "pytest-asyncio>=0.23",
-    "ruff>=0.4",
-    "mypy>=1.10",
-]
-
 [project.urls]
 Homepage = "https://github.com/devjourney/music-assistant-mcp"
 Repository = "https://github.com/devjourney/music-assistant-mcp.git"
@@ -64,6 +56,14 @@ music-assistant-mcp = "music_assistant_mcp.server:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/music_assistant_mcp"]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.23",
+    "ruff>=0.4",
+    "mypy>=1.10",
+]
 
 [tool.hatch.build.targets.sdist]
 include = [
