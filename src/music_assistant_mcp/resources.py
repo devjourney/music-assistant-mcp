@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from importlib.metadata import version
 
 from fastmcp import Context
 
@@ -28,6 +29,35 @@ def register(mcp):
             "playlists": await client.music.playlist_count(),
         }
         return json.dumps(stats, indent=2)
+
+    @mcp.tool()
+    async def get_server_info(ctx: Context) -> str:
+        """Get server information: MCP server version, Music Assistant backend details, and connected providers."""
+        client = ctx.request_context.lifespan_context["client"]
+        info = client.server_info
+        tools = await mcp.list_tools()
+        result = {
+            "mcp_server": {
+                "name": "music-assistant-mcp",
+                "version": version("music-assistant-mcp"),
+            },
+            "music_assistant": {
+                "server_version": info.server_version,
+                "server_id": info.server_id,
+                "base_url": info.base_url,
+            },
+            "providers": [
+                {
+                    "name": p.name,
+                    "domain": p.domain,
+                    "type": str(p.type),
+                    "available": p.available,
+                }
+                for p in client.providers
+            ],
+            "tool_count": len(tools),
+        }
+        return json.dumps(result, indent=2)
 
     @mcp.tool()
     async def get_library_stats(ctx: Context) -> str:

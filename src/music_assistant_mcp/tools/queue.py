@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from typing import Literal
 
 from fastmcp import Context
 from music_assistant_models.enums import QueueOption, RepeatMode
@@ -66,37 +67,36 @@ def register(mcp):
         return json.dumps([serialize_queue_item(i) for i in items], indent=2)
 
     @mcp.tool()
-    async def queue_clear(ctx: Context, queue_id: str) -> str:
-        """Clear all items from a queue.
+    async def queue_control(
+        ctx: Context,
+        queue_id: str,
+        action: Literal["clear", "shuffle", "repeat"],
+        enabled: bool | None = None,
+        mode: str | None = None,
+    ) -> str:
+        """Control queue settings.
+
+        - clear: clear all items from the queue
+        - shuffle: enable or disable shuffle (requires enabled param)
+        - repeat: set repeat mode (requires mode param: off, one, or all)
 
         Args:
             queue_id: The queue/player ID.
+            action: Action to perform: clear, shuffle, or repeat.
+            enabled: Shuffle state (for shuffle action).
+            mode: Repeat mode: off, one, or all (for repeat action).
         """
         client = ctx.request_context.lifespan_context["client"]
-        await client.player_queues.clear(queue_id)
-        return json.dumps({"status": "ok", "action": "clear", "queue_id": queue_id})
+        result = {"status": "ok", "action": action, "queue_id": queue_id}
 
-    @mcp.tool()
-    async def queue_shuffle(ctx: Context, queue_id: str, enabled: bool) -> str:
-        """Enable or disable shuffle on a queue.
+        if action == "clear":
+            await client.player_queues.clear(queue_id)
+        elif action == "shuffle":
+            await client.player_queues.shuffle(queue_id, enabled)
+            result["enabled"] = enabled
+        elif action == "repeat":
+            repeat_mode = RepeatMode(mode.lower())
+            await client.player_queues.repeat(queue_id, repeat_mode)
+            result["mode"] = mode
 
-        Args:
-            queue_id: The queue/player ID.
-            enabled: True to enable shuffle, False to disable.
-        """
-        client = ctx.request_context.lifespan_context["client"]
-        await client.player_queues.shuffle(queue_id, enabled)
-        return json.dumps({"status": "ok", "action": "shuffle", "queue_id": queue_id, "enabled": enabled})
-
-    @mcp.tool()
-    async def queue_repeat(ctx: Context, queue_id: str, mode: str) -> str:
-        """Set repeat mode on a queue.
-
-        Args:
-            queue_id: The queue/player ID.
-            mode: Repeat mode: off, one, or all.
-        """
-        client = ctx.request_context.lifespan_context["client"]
-        repeat_mode = RepeatMode(mode.lower())
-        await client.player_queues.repeat(queue_id, repeat_mode)
-        return json.dumps({"status": "ok", "action": "repeat", "queue_id": queue_id, "mode": mode})
+        return json.dumps(result)

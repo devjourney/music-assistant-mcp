@@ -68,7 +68,7 @@ Or add to your Claude Code MCP config:
 }
 ```
 
-## Tools (38)
+## Tools (19)
 
 ### Search & Browse
 - **search_music** - Search across all providers
@@ -76,42 +76,28 @@ Or add to your Claude Code MCP config:
 - **get_item_by_name** - Find item by name, artist, album
 
 ### Library & Discovery
-- **get_library_artists/albums/tracks/playlists** - Browse library with search/filter/pagination
-- **get_album_tracks** - Get tracks on an album
-- **get_artist_albums** - Get albums by an artist
-- **get_artist_toptracks** - Get top tracks for an artist
+- **get_library** - Browse library by media type (artist, album, track, playlist) with search/filter/pagination
+- **get_item_children** - Get child items: album tracks, artist albums, artist top tracks, or playlist tracks
 - **get_similar_tracks** - Get tracks similar to a given track
 - **get_recommendations** - Get personalized recommendations
 - **get_recently_played** - Recently played items
-- **add_to_favorites** - Add an item to favorites by URI
-- **remove_from_favorites** - Remove an item from favorites
+- **get_library_stats** - Library counts (tracks, albums, artists, playlists)
+- **get_server_info** - Server version, Music Assistant backend details, and connected providers
+- **manage_favorites** - Add or remove items from favorites
 
 ### Playback
 - **get_players** - List all players and state
-- **player_play** - Start playback
-- **player_pause** - Pause playback
-- **player_play_pause** - Toggle play/pause
-- **player_stop/next/previous** - Transport controls
-- **player_volume** - Set volume (0-100)
-- **player_volume_mute** - Mute or unmute
-- **player_power** - Power on/off
-- **player_seek** - Seek to position
-- **player_group** - Join a multi-room group
-- **player_ungroup** - Leave a multi-room group
+- **player_control** - Control a player: play, pause, stop, next, previous, seek, volume, mute, power, group, ungroup
 
 ### Queue
 - **play_media** - Play URIs on a queue
 - **get_queue** - Queue state
 - **get_queue_items** - Items in queue
-- **queue_clear** - Clear queue
-- **queue_shuffle** - Toggle shuffle
-- **queue_repeat** - Set repeat mode
+- **queue_control** - Queue settings: clear, shuffle, repeat
 
 ### Playlists
 - **create_playlist** - Create new playlist
-- **get_playlist_tracks** - List tracks in a playlist
-- **add_playlist_tracks** - Add tracks by URI
-- **remove_playlist_tracks** - Remove tracks by position
+- **manage_playlist_tracks** - Add or remove tracks from a playlist
 
 ## Resources
 

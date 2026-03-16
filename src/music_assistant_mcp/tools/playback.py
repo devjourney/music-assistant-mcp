@@ -3,10 +3,16 @@
 from __future__ import annotations
 
 import json
+from typing import Literal
 
 from fastmcp import Context
 
 from music_assistant_mcp.serializers import serialize_player
+
+PlayerAction = Literal[
+    "play", "pause", "stop", "next", "previous",
+    "seek", "volume", "mute", "power", "group", "ungroup",
+]
 
 
 def register(mcp):
@@ -18,138 +24,63 @@ def register(mcp):
         return json.dumps([serialize_player(p) for p in players], indent=2)
 
     @mcp.tool()
-    async def player_play_pause(ctx: Context, player_id: str) -> str:
-        """Toggle play/pause on a player.
+    async def player_control(
+        ctx: Context,
+        player_id: str,
+        action: PlayerAction,
+        position: int | None = None,
+        level: int | None = None,
+        muted: bool | None = None,
+        powered: bool | None = None,
+        target_player: str | None = None,
+    ) -> str:
+        """Control a player. Actions and their required parameters:
+
+        - play, pause, stop, next, previous, ungroup: no extra params
+        - seek: position (seconds)
+        - volume: level (0-100)
+        - mute: muted (true/false)
+        - power: powered (true/false)
+        - group: target_player (player ID to join)
 
         Args:
             player_id: The player ID.
+            action: Action to perform.
+            position: Seek position in seconds (for seek action).
+            level: Volume level 0-100 (for volume action).
+            muted: Mute state (for mute action).
+            powered: Power state (for power action).
+            target_player: Player ID to group with (for group action).
         """
         client = ctx.request_context.lifespan_context["client"]
-        await client.players.play_pause(player_id)
-        return json.dumps({"status": "ok", "action": "play_pause", "player_id": player_id})
+        result = {"status": "ok", "action": action, "player_id": player_id}
 
-    @mcp.tool()
-    async def player_stop(ctx: Context, player_id: str) -> str:
-        """Stop playback on a player.
+        if action == "play":
+            await client.players.play(player_id)
+        elif action == "pause":
+            await client.players.pause(player_id)
+        elif action == "stop":
+            await client.players.stop(player_id)
+        elif action == "next":
+            await client.players.next_track(player_id)
+        elif action == "previous":
+            await client.players.previous_track(player_id)
+        elif action == "seek":
+            await client.players.seek(player_id, position)
+            result["position"] = position
+        elif action == "volume":
+            await client.players.volume_set(player_id, level)
+            result["level"] = level
+        elif action == "mute":
+            await client.players.volume_mute(player_id, muted)
+            result["muted"] = muted
+        elif action == "power":
+            await client.players.power(player_id, powered)
+            result["powered"] = powered
+        elif action == "group":
+            await client.players.group(player_id, target_player)
+            result["target_player"] = target_player
+        elif action == "ungroup":
+            await client.players.ungroup(player_id)
 
-        Args:
-            player_id: The player ID.
-        """
-        client = ctx.request_context.lifespan_context["client"]
-        await client.players.stop(player_id)
-        return json.dumps({"status": "ok", "action": "stop", "player_id": player_id})
-
-    @mcp.tool()
-    async def player_next(ctx: Context, player_id: str) -> str:
-        """Skip to next track on a player.
-
-        Args:
-            player_id: The player ID.
-        """
-        client = ctx.request_context.lifespan_context["client"]
-        await client.players.next_track(player_id)
-        return json.dumps({"status": "ok", "action": "next", "player_id": player_id})
-
-    @mcp.tool()
-    async def player_previous(ctx: Context, player_id: str) -> str:
-        """Go to previous track on a player.
-
-        Args:
-            player_id: The player ID.
-        """
-        client = ctx.request_context.lifespan_context["client"]
-        await client.players.previous_track(player_id)
-        return json.dumps({"status": "ok", "action": "previous", "player_id": player_id})
-
-    @mcp.tool()
-    async def player_volume(ctx: Context, player_id: str, level: int) -> str:
-        """Set volume level on a player.
-
-        Args:
-            player_id: The player ID.
-            level: Volume level 0-100.
-        """
-        client = ctx.request_context.lifespan_context["client"]
-        await client.players.volume_set(player_id, level)
-        return json.dumps({"status": "ok", "action": "volume_set", "player_id": player_id, "level": level})
-
-    @mcp.tool()
-    async def player_power(ctx: Context, player_id: str, powered: bool) -> str:
-        """Turn a player on or off.
-
-        Args:
-            player_id: The player ID.
-            powered: True to power on, False to power off.
-        """
-        client = ctx.request_context.lifespan_context["client"]
-        await client.players.power(player_id, powered)
-        return json.dumps({"status": "ok", "action": "power", "player_id": player_id, "powered": powered})
-
-    @mcp.tool()
-    async def player_seek(ctx: Context, player_id: str, position: int) -> str:
-        """Seek to a position in the current track.
-
-        Args:
-            player_id: The player ID.
-            position: Position in seconds.
-        """
-        client = ctx.request_context.lifespan_context["client"]
-        await client.players.seek(player_id, position)
-        return json.dumps({"status": "ok", "action": "seek", "player_id": player_id, "position": position})
-
-    @mcp.tool()
-    async def player_play(ctx: Context, player_id: str) -> str:
-        """Start playback on a player.
-
-        Args:
-            player_id: The player ID.
-        """
-        client = ctx.request_context.lifespan_context["client"]
-        await client.players.play(player_id)
-        return json.dumps({"status": "ok", "action": "play", "player_id": player_id})
-
-    @mcp.tool()
-    async def player_pause(ctx: Context, player_id: str) -> str:
-        """Pause playback on a player.
-
-        Args:
-            player_id: The player ID.
-        """
-        client = ctx.request_context.lifespan_context["client"]
-        await client.players.pause(player_id)
-        return json.dumps({"status": "ok", "action": "pause", "player_id": player_id})
-
-    @mcp.tool()
-    async def player_volume_mute(ctx: Context, player_id: str, muted: bool) -> str:
-        """Mute or unmute a player.
-
-        Args:
-            player_id: The player ID.
-            muted: True to mute, False to unmute.
-        """
-        client = ctx.request_context.lifespan_context["client"]
-        await client.players.volume_mute(player_id, muted)
-        return json.dumps({"status": "ok", "action": "volume_mute", "player_id": player_id, "muted": muted})
-
-    @mcp.tool()
-    async def player_group(ctx: Context, player_id: str, target_player: str) -> str:
-        """Join a player to another player's group for multi-room audio.
-
-        Args:
-            player_id: The player ID to join.
-            target_player: The player ID of the group to join.
-        """
-        client = ctx.request_context.lifespan_context["client"]
-        await client.players.group(player_id, target_player)
-        return json.dumps({"status": "ok", "action": "group", "player_id": player_id, "target_player": target_player})
-
-    @mcp.tool()
-    async def player_ungroup(ctx: Context, player_id: str) -> str:
-        """Remove a player from its group.
-
-        Args:
-            player_id: The player ID to ungroup.
-        """
-        client = ctx.request_context.lifespan_context["client"]
-        await client.players.ungroup(player_id)
-        return json.dumps({"status": "ok", "action": "ungroup", "player_id": player_id})
+        return json.dumps(result)

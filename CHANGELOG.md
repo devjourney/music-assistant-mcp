@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.2.0 — 2026-03-16
+
+- **BREAKING**: Consolidated 39 tools down to 18 using action parameters to stay within MCP client tool limits
+  - `get_library` replaces `get_library_artists/albums/tracks/playlists` — use `media_type` param
+  - `get_item_children` replaces `get_album_tracks`, `get_artist_albums`, `get_artist_toptracks`, `get_playlist_tracks` — use `child_type` param
+  - `player_control` replaces 12 individual player tools — use `action` param (play, pause, stop, next, previous, seek, volume, mute, power, group, ungroup)
+  - `queue_control` replaces `queue_clear/shuffle/repeat` — use `action` param
+  - `manage_favorites` replaces `add_to_favorites/remove_from_favorites` — use `action` param
+  - `manage_playlist_tracks` replaces `add_playlist_tracks/remove_playlist_tracks` — use `action` param
+- Added `get_server_info` tool: MCP server version, Music Assistant backend details, connected providers, and tool count
+- All functionality from v0.1.3 is preserved — no features removed
+
 ## 0.1.3 — 2026-03-15
 
 - Added 11 new tools (27 → 38):
