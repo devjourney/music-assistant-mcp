@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.2 — 2025-03-15
+
+- Fixed duplicate `get_players` tool registration in `resources.py` that caused tools to be dropped
+
 ## 0.1.1 — 2025-03-15
 
 - Fixed CI: moved dev dependencies from `[project.optional-dependencies]` to `[dependency-groups]` so `uv sync --dev` installs them correctly
