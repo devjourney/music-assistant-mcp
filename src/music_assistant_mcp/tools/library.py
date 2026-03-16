@@ -166,3 +166,80 @@ def register(mcp):
         types = [MediaType(t) for t in media_types] if media_types else None
         items = await client.music.recently_played(limit=limit, media_types=types)
         return json.dumps([serialize_media_item(i) for i in items], indent=2)
+
+    @mcp.tool()
+    async def get_artist_toptracks(
+        ctx: Context,
+        item_id: str,
+        provider: str,
+    ) -> str:
+        """Get top tracks for an artist.
+
+        Args:
+            item_id: Artist ID.
+            provider: Provider instance ID or domain.
+        """
+        client = ctx.request_context.lifespan_context["client"]
+        tracks = await client.music.get_artist_toptracks(item_id, provider)
+        return json.dumps([serialize_track(t) for t in tracks], indent=2)
+
+    @mcp.tool()
+    async def get_similar_tracks(
+        ctx: Context,
+        item_id: str,
+        provider: str,
+    ) -> str:
+        """Get tracks similar to a given track.
+
+        Args:
+            item_id: Track ID.
+            provider: Provider instance ID or domain.
+        """
+        client = ctx.request_context.lifespan_context["client"]
+        tracks = await client.music.similar_tracks(item_id, provider)
+        return json.dumps([serialize_track(t) for t in tracks], indent=2)
+
+    @mcp.tool()
+    async def get_recommendations(ctx: Context) -> str:
+        """Get personalized music recommendations."""
+        client = ctx.request_context.lifespan_context["client"]
+        folders = await client.music.recommendations()
+        result = []
+        for folder in folders:
+            entry = {
+                "name": folder.name,
+                "subtitle": getattr(folder, "subtitle", None),
+                "items": [serialize_media_item(i) for i in folder.items],
+            }
+            result.append(entry)
+        return json.dumps(result, indent=2)
+
+    @mcp.tool()
+    async def add_to_favorites(
+        ctx: Context,
+        uri: str,
+    ) -> str:
+        """Add a media item to favorites.
+
+        Args:
+            uri: The URI of the item to favorite.
+        """
+        client = ctx.request_context.lifespan_context["client"]
+        await client.music.add_item_to_favorites(uri)
+        return json.dumps({"status": "ok", "action": "add_favorite", "uri": uri})
+
+    @mcp.tool()
+    async def remove_from_favorites(
+        ctx: Context,
+        media_type: str,
+        item_id: str,
+    ) -> str:
+        """Remove an item from favorites.
+
+        Args:
+            media_type: Type of media (track, album, artist, playlist).
+            item_id: The library item ID.
+        """
+        client = ctx.request_context.lifespan_context["client"]
+        await client.music.remove_item_from_favorites(MediaType(media_type), item_id)
+        return json.dumps({"status": "ok", "action": "remove_favorite", "media_type": media_type, "item_id": item_id})

@@ -96,3 +96,60 @@ def register(mcp):
         client = ctx.request_context.lifespan_context["client"]
         await client.players.seek(player_id, position)
         return json.dumps({"status": "ok", "action": "seek", "player_id": player_id, "position": position})
+
+    @mcp.tool()
+    async def player_play(ctx: Context, player_id: str) -> str:
+        """Start playback on a player.
+
+        Args:
+            player_id: The player ID.
+        """
+        client = ctx.request_context.lifespan_context["client"]
+        await client.players.play(player_id)
+        return json.dumps({"status": "ok", "action": "play", "player_id": player_id})
+
+    @mcp.tool()
+    async def player_pause(ctx: Context, player_id: str) -> str:
+        """Pause playback on a player.
+
+        Args:
+            player_id: The player ID.
+        """
+        client = ctx.request_context.lifespan_context["client"]
+        await client.players.pause(player_id)
+        return json.dumps({"status": "ok", "action": "pause", "player_id": player_id})
+
+    @mcp.tool()
+    async def player_volume_mute(ctx: Context, player_id: str, muted: bool) -> str:
+        """Mute or unmute a player.
+
+        Args:
+            player_id: The player ID.
+            muted: True to mute, False to unmute.
+        """
+        client = ctx.request_context.lifespan_context["client"]
+        await client.players.volume_mute(player_id, muted)
+        return json.dumps({"status": "ok", "action": "volume_mute", "player_id": player_id, "muted": muted})
+
+    @mcp.tool()
+    async def player_group(ctx: Context, player_id: str, target_player: str) -> str:
+        """Join a player to another player's group for multi-room audio.
+
+        Args:
+            player_id: The player ID to join.
+            target_player: The player ID of the group to join.
+        """
+        client = ctx.request_context.lifespan_context["client"]
+        await client.players.group(player_id, target_player)
+        return json.dumps({"status": "ok", "action": "group", "player_id": player_id, "target_player": target_player})
+
+    @mcp.tool()
+    async def player_ungroup(ctx: Context, player_id: str) -> str:
+        """Remove a player from its group.
+
+        Args:
+            player_id: The player ID to ungroup.
+        """
+        client = ctx.request_context.lifespan_context["client"]
+        await client.players.ungroup(player_id)
+        return json.dumps({"status": "ok", "action": "ungroup", "player_id": player_id})
