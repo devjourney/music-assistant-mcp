@@ -2,10 +2,14 @@
 
 from __future__ import annotations
 
+import os
 import asyncio
 import logging
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
+from typing import cast
+
+from fastmcp.server.server import Transport
 
 import aiohttp
 from fastmcp import FastMCP
@@ -66,8 +70,20 @@ playlists.register(mcp)
 resources.register(mcp)
 
 
+_ALLOWED_TRANSPORTS: set[Transport] = {"stdio", "streamable-http"}
+
+
 def main():
-    mcp.run()
+    raw = os.environ.get("MA_MCP_TRANSPORT", "stdio").strip().lower()
+    if raw not in _ALLOWED_TRANSPORTS:
+        raise ValueError(
+            f"Unsupported MA_MCP_TRANSPORT={raw!r}. "
+            f"Allowed values: {', '.join(sorted(_ALLOWED_TRANSPORTS))}"
+        )
+    transport = cast(Transport, raw)
+    host = os.environ.get("MA_MCP_HOST", "0.0.0.0")
+    port = int(os.environ.get("MA_MCP_PORT", "8000"))
+    mcp.run(transport=transport, host=host, port=port)
 
 
 if __name__ == "__main__":
