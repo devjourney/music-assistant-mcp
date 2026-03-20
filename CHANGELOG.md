@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.2 — 2026-03-19
+
+- Fixed `TypeError` when using default stdio transport: `host` and `port` args are now only passed for `streamable-http`
+
 ## 0.2.1 — 2026-03-19
 
 - Added `streamable-http` transport support via `MA_MCP_TRANSPORT` env var (default: `stdio`)

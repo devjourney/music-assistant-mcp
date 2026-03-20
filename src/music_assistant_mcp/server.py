@@ -81,9 +81,11 @@ def main():
             f"Allowed values: {', '.join(sorted(_ALLOWED_TRANSPORTS))}"
         )
     transport = cast(Transport, raw)
-    host = os.environ.get("MA_MCP_HOST", "0.0.0.0")
-    port = int(os.environ.get("MA_MCP_PORT", "8000"))
-    mcp.run(transport=transport, host=host, port=port)
+    kwargs: dict = {"transport": transport}
+    if transport == "streamable-http":
+        kwargs["host"] = os.environ.get("MA_MCP_HOST", "0.0.0.0")
+        kwargs["port"] = int(os.environ.get("MA_MCP_PORT", "8668"))
+    mcp.run(**kwargs)
 
 
 if __name__ == "__main__":
