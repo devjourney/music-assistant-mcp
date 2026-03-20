@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.1 — 2026-03-19
+
+- Added `streamable-http` transport support via `MA_MCP_TRANSPORT` env var (default: `stdio`)
+- Added `MA_MCP_HOST` and `MA_MCP_PORT` env vars for configuring the HTTP transport (default: `0.0.0.0:8000`)
+
 ## 0.2.0 — 2026-03-16
 
 - **BREAKING**: Consolidated 39 tools down to 18 using action parameters to stay within MCP client tool limits

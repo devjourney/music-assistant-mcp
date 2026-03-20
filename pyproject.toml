@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "music-assistant-mcp"
-version = "0.2.0"
+version = "0.2.1"
 description = "MCP server for Music Assistant – control playback, browse libraries, and manage queues via AI assistants"
 readme = "README.md"
 requires-python = ">=3.11"
