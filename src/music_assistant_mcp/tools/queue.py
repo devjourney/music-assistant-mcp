@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 import json
-from typing import Literal
+from typing import Annotated, Literal
 
 from fastmcp import Context
 from music_assistant_models.enums import QueueOption, RepeatMode
+from pydantic import Field
 
 from music_assistant_mcp.serializers import serialize_queue, serialize_queue_item
 
@@ -15,19 +16,19 @@ def register(mcp):
     @mcp.tool()
     async def play_media(
         ctx: Context,
-        queue_id: str,
-        media: str | list[str],
-        option: str = "play",
-        radio_mode: bool = False,
+        queue_id: Annotated[str, Field(description="The queue/player ID.")],
+        media: Annotated[
+            str | list[str], Field(description="URI string or list of URI strings to play.")
+        ],
+        option: Annotated[
+            Literal["play", "replace", "next", "replace_next", "add"],
+            Field(description="How to queue the media."),
+        ] = "play",
+        radio_mode: Annotated[
+            bool, Field(description="Keep playing similar tracks after the queue ends.")
+        ] = False,
     ) -> str:
-        """Play media on a queue. Media can be URIs or item names.
-
-        Args:
-            queue_id: The queue/player ID.
-            media: URI string or list of URI strings to play.
-            option: Queue option: play, replace, next, replace_next, add. Defaults to play.
-            radio_mode: Enable radio mode to keep playing similar tracks. Defaults to False.
-        """
+        """Play media on a queue."""
         client = ctx.request_context.lifespan_context["client"]
         queue_option = QueueOption(option.lower()) if option else None
         await client.player_queues.play_media(
@@ -36,12 +37,11 @@ def register(mcp):
         return json.dumps({"status": "ok", "action": "play_media", "queue_id": queue_id})
 
     @mcp.tool()
-    async def get_queue(ctx: Context, queue_id: str) -> str:
-        """Get the current state of a player queue.
-
-        Args:
-            queue_id: The queue/player ID.
-        """
+    async def get_queue(
+        ctx: Context,
+        queue_id: Annotated[str, Field(description="The queue/player ID.")],
+    ) -> str:
+        """Get the current state of a player queue."""
         client = ctx.request_context.lifespan_context["client"]
         queue = client.player_queues.get(queue_id)
         if queue is None:
@@ -51,17 +51,11 @@ def register(mcp):
     @mcp.tool()
     async def get_queue_items(
         ctx: Context,
-        queue_id: str,
-        limit: int = 25,
-        offset: int = 0,
+        queue_id: Annotated[str, Field(description="The queue/player ID.")],
+        limit: Annotated[int, Field(description="Max items to return (default 25).")] = 25,
+        offset: Annotated[int, Field(description="Pagination offset.")] = 0,
     ) -> str:
-        """Get items in a player queue.
-
-        Args:
-            queue_id: The queue/player ID.
-            limit: Max items to return. Defaults to 25.
-            offset: Pagination offset.
-        """
+        """Get items in a player queue."""
         client = ctx.request_context.lifespan_context["client"]
         items = await client.player_queues.get_queue_items(queue_id, limit=limit, offset=offset)
         return json.dumps([serialize_queue_item(i) for i in items], indent=2)
@@ -69,23 +63,20 @@ def register(mcp):
     @mcp.tool()
     async def queue_control(
         ctx: Context,
-        queue_id: str,
-        action: Literal["clear", "shuffle", "repeat"],
-        enabled: bool | None = None,
-        mode: str | None = None,
+        queue_id: Annotated[str, Field(description="The queue/player ID.")],
+        action: Annotated[
+            Literal["clear", "shuffle", "repeat"],
+            Field(description="Action to perform."),
+        ],
+        enabled: Annotated[
+            bool | None, Field(description="Enable/disable (for shuffle action).")
+        ] = None,
+        mode: Annotated[
+            Literal["off", "one", "all"] | None,
+            Field(description="Repeat mode (for repeat action)."),
+        ] = None,
     ) -> str:
-        """Control queue settings.
-
-        - clear: clear all items from the queue
-        - shuffle: enable or disable shuffle (requires enabled param)
-        - repeat: set repeat mode (requires mode param: off, one, or all)
-
-        Args:
-            queue_id: The queue/player ID.
-            action: Action to perform: clear, shuffle, or repeat.
-            enabled: Shuffle state (for shuffle action).
-            mode: Repeat mode: off, one, or all (for repeat action).
-        """
+        """Control queue settings."""
         client = ctx.request_context.lifespan_context["client"]
         result = {"status": "ok", "action": action, "queue_id": queue_id}
 

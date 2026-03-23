@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 import json
-from typing import Literal
+from typing import Annotated, Literal
 
 from fastmcp import Context
+from pydantic import Field
 
 from music_assistant_mcp.serializers import serialize_player
 
@@ -26,32 +27,25 @@ def register(mcp):
     @mcp.tool()
     async def player_control(
         ctx: Context,
-        player_id: str,
-        action: PlayerAction,
-        position: int | None = None,
-        level: int | None = None,
-        muted: bool | None = None,
-        powered: bool | None = None,
-        target_player: str | None = None,
+        player_id: Annotated[str, Field(description="The player ID.")],
+        action: Annotated[PlayerAction, Field(description="Action to perform.")],
+        position: Annotated[
+            int | None, Field(description="Seek position in seconds (for seek action).")
+        ] = None,
+        level: Annotated[
+            int | None, Field(description="Volume level 0-100 (for volume action).")
+        ] = None,
+        muted: Annotated[
+            bool | None, Field(description="Mute state (for mute action).")
+        ] = None,
+        powered: Annotated[
+            bool | None, Field(description="Power state (for power action).")
+        ] = None,
+        target_player: Annotated[
+            str | None, Field(description="Player ID to group with (for group action).")
+        ] = None,
     ) -> str:
-        """Control a player. Actions and their required parameters:
-
-        - play, pause, stop, next, previous, ungroup: no extra params
-        - seek: position (seconds)
-        - volume: level (0-100)
-        - mute: muted (true/false)
-        - power: powered (true/false)
-        - group: target_player (player ID to join)
-
-        Args:
-            player_id: The player ID.
-            action: Action to perform.
-            position: Seek position in seconds (for seek action).
-            level: Volume level 0-100 (for volume action).
-            muted: Mute state (for mute action).
-            powered: Power state (for power action).
-            target_player: Player ID to group with (for group action).
-        """
+        """Control a player."""
         client = ctx.request_context.lifespan_context["client"]
         result = {"status": "ok", "action": action, "player_id": player_id}
 

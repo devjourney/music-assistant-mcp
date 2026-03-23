@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 import json
-from typing import Literal
+from typing import Annotated, Literal
 
 from fastmcp import Context
 from music_assistant_models.enums import MediaType
+from pydantic import Field
 
 from music_assistant_mcp.serializers import (
     serialize_album,
@@ -23,23 +24,24 @@ def register(mcp):
     @mcp.tool()
     async def get_library(
         ctx: Context,
-        media_type: Literal["artist", "album", "track", "playlist"],
-        search: str | None = None,
-        limit: int = 25,
-        offset: int = 0,
-        favorite: bool | None = None,
-        order_by: MediaOrderBy | None = None,
+        media_type: Annotated[
+            Literal["artist", "album", "track", "playlist"],
+            Field(description="Type to browse: artist, album, track, or playlist."),
+        ],
+        search: Annotated[str | None, Field(description="Filter results by name.")] = None,
+        limit: Annotated[int, Field(description="Max results (default 25).")] = 25,
+        offset: Annotated[int, Field(description="Pagination offset.")] = 0,
+        favorite: Annotated[
+            bool | None,
+            Field(
+                description="Filter to favorites only. Applies to artist, album, and track (ignored for playlist)."
+            ),
+        ] = None,
+        order_by: Annotated[
+            MediaOrderBy | None, Field(description="Sort results by this field.")
+        ] = None,
     ) -> str:
-        """Browse the music library by media type.
-
-        Args:
-            media_type: Type to browse: artist, album, track, or playlist.
-            search: Filter by name.
-            limit: Max results. Defaults to 25.
-            offset: Pagination offset.
-            favorite: Filter favorites only (not supported for playlists).
-            order_by: Field to sort results by.
-        """
+        """Browse the music library by media type."""
         client = ctx.request_context.lifespan_context["client"]
         serializers = {
             "artist": (client.music.get_library_artists, serialize_artist),
@@ -55,46 +57,43 @@ def register(mcp):
         return json.dumps([serialize(i) for i in items], indent=2)
 
     @mcp.tool()
-    async def get_item_children(
+    async def get_album_tracks(
         ctx: Context,
-        item_id: str,
-        provider: str,
-        child_type: Literal["album_tracks", "artist_albums", "artist_toptracks", "playlist_tracks"],
+        item_id: Annotated[str, Field(description="The album ID.")],
+        provider: Annotated[str, Field(description="Provider instance ID or domain.")],
     ) -> str:
-        """Get child items for a media item.
+        """Get all tracks on an album."""
+        client = ctx.request_context.lifespan_context["client"]
+        tracks = await client.music.get_album_tracks(item_id, provider)
+        return json.dumps([serialize_track(t) for t in tracks], indent=2)
 
-        Args:
-            item_id: The parent item ID.
-            provider: Provider instance ID or domain.
-            child_type: What to retrieve:
-                - album_tracks: tracks on an album
-                - artist_albums: albums by an artist
-                - artist_toptracks: top tracks for an artist
-                - playlist_tracks: tracks in a playlist
-        """
+    @mcp.tool()
+    async def get_artist_details(
+        ctx: Context,
+        item_id: Annotated[str, Field(description="The artist ID.")],
+        provider: Annotated[str, Field(description="Provider instance ID or domain.")],
+        detail_type: Annotated[
+            Literal["albums", "top_tracks"],
+            Field(description="What to retrieve: albums or top_tracks."),
+        ],
+    ) -> str:
+        """Get albums or top tracks for an artist."""
         client = ctx.request_context.lifespan_context["client"]
         dispatch = {
-            "album_tracks": (client.music.get_album_tracks, serialize_track),
-            "artist_albums": (client.music.get_artist_albums, serialize_album),
-            "artist_toptracks": (client.music.get_artist_toptracks, serialize_track),
-            "playlist_tracks": (client.music.get_playlist_tracks, serialize_track),
+            "albums": (client.music.get_artist_albums, serialize_album),
+            "top_tracks": (client.music.get_artist_toptracks, serialize_track),
         }
-        fetch, serialize = dispatch[child_type]
+        fetch, serialize = dispatch[detail_type]
         items = await fetch(item_id, provider)
         return json.dumps([serialize(i) for i in items], indent=2)
 
     @mcp.tool()
     async def get_similar_tracks(
         ctx: Context,
-        item_id: str,
-        provider: str,
+        item_id: Annotated[str, Field(description="The track ID.")],
+        provider: Annotated[str, Field(description="Provider instance ID or domain.")],
     ) -> str:
-        """Get tracks similar to a given track.
-
-        Args:
-            item_id: Track ID.
-            provider: Provider instance ID or domain.
-        """
+        """Get tracks similar to a given track."""
         client = ctx.request_context.lifespan_context["client"]
         tracks = await client.music.similar_tracks(item_id, provider)
         return json.dumps([serialize_track(t) for t in tracks], indent=2)
@@ -117,15 +116,13 @@ def register(mcp):
     @mcp.tool()
     async def get_recently_played(
         ctx: Context,
-        limit: int = 10,
-        media_types: list[str] | None = None,
+        limit: Annotated[int, Field(description="Max results (default 10).")] = 10,
+        media_types: Annotated[
+            list[Literal["track", "album", "artist", "playlist"]] | None,
+            Field(description="Filter by media type. Returns all types if not specified."),
+        ] = None,
     ) -> str:
-        """Get recently played items.
-
-        Args:
-            limit: Max results. Defaults to 10.
-            media_types: Filter by type (track, album, artist, playlist).
-        """
+        """Get recently played items."""
         client = ctx.request_context.lifespan_context["client"]
         types = [MediaType(t) for t in media_types] if media_types else None
         items = await client.music.recently_played(limit=limit, media_types=types)
@@ -134,22 +131,24 @@ def register(mcp):
     @mcp.tool()
     async def manage_favorites(
         ctx: Context,
-        action: Literal["add", "remove"],
-        uri: str | None = None,
-        media_type: str | None = None,
-        item_id: str | None = None,
+        action: Annotated[
+            Literal["add", "remove"],
+            Field(description="Action to perform: add or remove."),
+        ],
+        uri: Annotated[
+            str | None,
+            Field(description="URI of the item to favorite (required for add)."),
+        ] = None,
+        media_type: Annotated[
+            Literal["track", "album", "artist", "playlist"] | None,
+            Field(description="Media type (required for remove)."),
+        ] = None,
+        item_id: Annotated[
+            str | None,
+            Field(description="The library item ID (required for remove)."),
+        ] = None,
     ) -> str:
-        """Add or remove items from favorites.
-
-        - add: requires uri
-        - remove: requires media_type and item_id
-
-        Args:
-            action: Action to perform: add or remove.
-            uri: URI of the item to favorite (for add).
-            media_type: Type of media: track, album, artist, playlist (for remove).
-            item_id: The library item ID (for remove).
-        """
+        """Add or remove items from favorites."""
         client = ctx.request_context.lifespan_context["client"]
         if action == "add":
             await client.music.add_item_to_favorites(uri)

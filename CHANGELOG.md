@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.3.0 — 2026-03-22
+
+- **BREAKING**: Replaced `get_item_children` with dedicated tools for clarity (19 → 20 tools)
+  - `get_album_tracks` — get all tracks on an album (takes `item_id`, `provider`)
+  - `get_artist_details` — get albums or top tracks for an artist (use `detail_type` param: `albums` or `top_tracks`)
+- **BREAKING**: `manage_playlist_tracks` now accepts a `list` action to retrieve playlist tracks, replacing the need for a separate tool
+- **BREAKING**: All tool parameters now use `Annotated[..., Field(description=...)]` instead of docstring `Args:` blocks for richer schema descriptions in MCP clients
+- **BREAKING**: `media_types` parameters on `search`, `get_recently_played`, and `get_library` are now `list[Literal["track", "album", "artist", "playlist"]]` instead of `list[str]` for stricter validation
+- All functionality from v0.2.2 is preserved — no features removed
+
 ## 0.2.2 — 2026-03-19
 
 - Fixed `TypeError` when using default stdio transport: `host` and `port` args are now only passed for `streamable-http`
